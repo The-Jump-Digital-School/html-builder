@@ -1,0 +1,94 @@
+#!/usr/bin/bash
+
+# Does layout.html exist in this current working directory?
+if ! [ -f layout.html ]; then
+	echo "Uh oh! No root layout.html found"
+	exit 1 # ERROR
+fi
+
+
+#
+# Important CONSTANTS
+#
+
+# Current working directory
+DIR=$(pwd)
+
+# Store the contents of layout.html into LAYOUT
+LAYOUT=$(cat layout.html)
+
+# Placeholders to find in our LAYOUT
+PLACEHOLDER="<content-placeholder />"
+HEAD_PLACEHOLDER="<head-placeholder />"
+
+#
+
+
+#
+# Builds an index.html file by combining layout and content:
+#
+function build {
+	# If head.html exists, grab its contents:
+	HEAD=$(if [ -f head.html ]; then cat head.html; fi)
+	
+	# Grab the text from content.html:
+	CONTENTS=$(cat content.html)
+	
+	
+	# Replace <head-placeholder /> in layout.html with head.html contents
+	index=${LAYOUT/$HEAD_PLACEHOLDER/$HEAD}
+
+	# Overwrite generated 'index' by replacing <content-placeholder /> with content.html:
+	index=${index/$PLACEHOLDER/$CONTENTS}
+
+	# Save generated text:
+	echo "$index" > index.html # <- overwrite index.html with new source code
+}
+
+#
+
+
+#
+# Crawls through sub-directories recursively looking
+# for content.html files:
+#
+function crawl-and-build {
+	# list directories and files of current directory and
+	# access their value one-by-one through the variable 'entry'
+	for entry in $(ls .); do
+
+		# Is 'entry' a directory?
+		if [ -d $entry ]; then
+			
+			# Yes. So we navigate to that directory:
+			cd $entry
+			
+			# and call 'crawl-and-build' there...
+			crawl-and-build
+			
+			# When done, we come back here and
+			# continue the loop:
+			cd ..
+
+		# is 'entry' the file we're looking for?
+		elif [[ $entry == content.html ]]; then
+			dir=$(pwd) # <-- Where are we?
+			echo ${dir/$DIR/.} # <-- Print to terminal for debugging purposes
+
+			# Yes. So, we call our build function:
+			build
+		fi
+	done
+}
+
+#
+
+
+#
+# Call our 'crawl-and-build' function to
+# get the ball moving! Otherwise this script
+# won't do very much...
+#
+crawl-and-build
+
+#
