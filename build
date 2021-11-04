@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/usr/bin/env bash
 
 # Does layout.html exist in this current working directory?
 if ! [ -f layout.html ]; then
